@@ -12,20 +12,14 @@ const feedbackSchema = new mongoose.Schema(
     description: {
       type: String,
       required: [true, "Description is required"],
-      minlength: [5, "Description must be at least 5 characters"],
+      minlength: [20, "Description must be at least 20 characters"],
       trim: true,
     },
 
     category: {
       type: String,
-      enum: [
-        "Bug",
-        "Feature Request",
-        "Improvement",
-        "Other",
-        "User Feedback",
-      ],
-      default: "Other",
+      enum: ["Bug", "Feature Request", "Improvement", "Other"],
+      required: true,
     },
 
     status: {
@@ -34,56 +28,41 @@ const feedbackSchema = new mongoose.Schema(
       default: "New",
     },
 
-    // 🔥 USER INFO
     submitterName: {
       type: String,
-      default: "Anonymous",
+      default: "",
+      maxlength: 120,
       trim: true,
     },
 
     submitterEmail: {
       type: String,
-      lowercase: true,
+      default: "",
       trim: true,
+      lowercase: true,
     },
 
-    // 🔥 AI FIELDS
-    ai_category: {
-      type: String,
-      default: null,
-    },
-
+    ai_category: { type: String, default: null },
     ai_sentiment: {
       type: String,
-      enum: ["Positive", "Neutral", "Negative", null],
       default: null,
     },
-
     ai_priority: {
       type: Number,
       min: 1,
-      max: 5,
+      max: 10,
       default: null,
     },
-
-    ai_summary: {
-      type: String,
-      default: null,
-    },
-
-    ai_tags: {
-      type: [String],
-      default: [],
-    },
-
-    ai_processed: {
-      type: Boolean,
-      default: false,
-    },
+    ai_summary: { type: String, default: null },
+    ai_tags: { type: [String], default: [] },
+    ai_processed: { type: Boolean, default: false },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
+
+feedbackSchema.index({ status: 1 });
+feedbackSchema.index({ category: 1 });
+feedbackSchema.index({ ai_priority: -1 });
+feedbackSchema.index({ createdAt: -1 });
 
 export default mongoose.model("Feedback", feedbackSchema);

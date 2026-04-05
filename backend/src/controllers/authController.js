@@ -1,35 +1,56 @@
+import jwt from "jsonwebtoken";
+
 export const loginUser = async (req, res) => {
   try {
-    const { email, password, role } = req.body;
+    const { email, password } = req.body;
 
-    // 🔥 simple demo auth
-    if (role === "admin") {
-      if (email === "admin@gmail.com" && password === "1234") {
-        return res.status(200).json({
-          success: true,
-          role: "admin",
-          message: "Admin login successful",
-        });
-      } else {
-        return res.status(401).json({
-          success: false,
-          message: "Invalid admin credentials",
-        });
-      }
-    }
+    const adminEmail = process.env.ADMIN_EMAIL || "admin@gmail.com";
+    const adminPassword = process.env.ADMIN_PASSWORD || "1234";
+    const secret = process.env.JWT_SECRET;
 
-    // 🔥 user login (simple)
-    if (role === "user") {
-      return res.status(200).json({
-        success: true,
-        role: "user",
-        message: "User login successful",
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        data: null,
+        error: "VALIDATION",
+        message: "Email and password are required",
       });
     }
 
+    if (!secret) {
+      return res.status(500).json({
+        success: false,
+        data: null,
+        error: "SERVER_CONFIG",
+        message: "JWT_SECRET is not configured",
+      });
+    }
+
+    if (email !== adminEmail || password !== adminPassword) {
+      return res.status(401).json({
+        success: false,
+        data: null,
+        error: "UNAUTHORIZED",
+        message: "Invalid credentials",
+      });
+    }
+
+    const token = jwt.sign({ role: "admin", sub: email }, secret, {
+      expiresIn: "7d",
+    });
+
+    return res.status(200).json({
+      success: true,
+      data: { token, role: "admin" },
+      error: null,
+      message: "Login successful",
+    });
   } catch (error) {
-    res.status(500).json({
+    console.error("loginUser:", error);
+    return res.status(500).json({
       success: false,
+      data: null,
+      error: "SERVER_ERROR",
       message: "Server error",
     });
   }
